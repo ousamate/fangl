@@ -1,0 +1,170 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<title></title>
+</head>
+<body>
+<div id="box"></div>
+
+<script type="text/javascript" src="js/react.min.js"></script>
+<script type="text/javascript" src="js/react-dom.min.js"></script>
+<script src="js/browser.min.js"></script>
+<script type="text/javascript" src="js/ajax.js"></script>
+
+<script type="text/babel">
+
+
+
+var DivElement=React.createClass({
+ 	style:{
+ 		textAlign:"center"
+ 	},
+ 	getInitialState:function(){
+ 		return {
+ 			user:{},
+ 			password:{},
+ 			cPwd:{}
+
+ 		}
+ 	},
+ 	validateUser:function(e){
+ 	    var userValue=e.target.value;
+        ajax({
+            type:"get",
+            url:"/user/find",
+            data:{
+                user:userValue,
+                findType:"exact"
+            },
+            success:function(data){
+                if(data.length>0){
+                    this.setState({
+                        user:{
+                            info:"用户名以存在",
+                            style:{
+                                color:"red",
+                            },
+                            isValid:false
+                        }
+                    });
+                }else{
+                    if(/^\w{6,10}$/.test(userValue)){
+                        this.setState({
+                        user:{
+                            info:"√",
+                            style:{
+                                color:"green",
+                            },
+                            isValid:true
+                        }
+                    });
+                    }else{
+                      this.setState({
+                            user:{
+                                info:"×",
+                                style:{
+                                    color:"red",
+                                },
+                                isValid:false
+                            }
+                        });
+                    }
+                }
+            }.bind(this)
+        });
+
+ 	},
+ 	validatePwd:function(e){
+ 		if(/^\d{6,10}$/.test(e.target.value)){
+            this.setState({
+            	password:{
+            		info:"√",
+            		style:{
+            			color:"green",
+            		},
+            		isValid:true
+            	}
+            });
+ 		}else{
+ 		  this.setState({
+            	password:{
+            		info:"×",
+            		style:{
+            			color:"red",
+            		},
+            		isValid:false
+            	}
+            });
+ 		}
+
+
+ 	},
+ 	validateConfPwd:function(e){
+ 		var value=e.target.value;
+ 		console.log(this.refs);
+ 		var pwdValue=this.refs.pwd.refs.input.value;
+ 		console.log(value);
+ 		console.log(pwdValue);
+ 		if(value==pwdValue){
+		   this.setState({
+        	cPwd:{
+        		info:"√",
+        		style:{
+        			color:"green",
+        		},
+        	isValid:true	
+        	}
+        });
+ 		}else{
+ 		   this.setState({
+        	cPwd:{
+        		info:"×",
+        		style:{
+        			color:"red",
+        		},
+        		isValid:false
+        	}
+        });		
+ 		}
+ 	},
+ 	subF:function(){
+ 		if(this.state.user.isValid && this.state.password.isValid && this.state.cPwd.isValid){
+ 			ajax({
+                type:"post",
+                url:"/user/add",
+                data:{
+                    user:this.refs.user.refs.input.value,
+                    pwd:this.refs.pwd.refs.input.value,
+                },
+                success:function(data){
+                    location.href="login.html"
+                }
+            });
+ 		}else{
+ 			alert("error");
+ 		}
+ 	},	
+	render:function(){
+		return <div>
+			<h1 style={this.style}>注册</h1>
+			<InputElement type="text" validate={this.validateUser} info={this.state.user.info} style={this.state.user.style} ref="user">用户:</InputElement>
+			<InputElement type="password" ref="pwd" validate={this.validatePwd} info={this.state.password.info} style={this.state.password.style}>密码:</InputElement>
+			<InputElement type="password" validate={this.validateConfPwd} info={this.state.cPwd.info} style={this.state.cPwd.style}>确认密码:</InputElement>
+			<InputElement type="text">邮箱:</InputElement>
+			<button onClick={this.subF}>注册</button>
+		</div>
+	}
+});
+
+
+var InputElement=React.createClass({
+	render:function(){
+		return <p><label>{this.props.children}</label><input ref="input" type={this.props.type} onBlur={this.props.validate}/><span style={this.props.style}>{this.props.info}</span></p>
+	}
+});
+
+ ReactDOM.render(<DivElement/>,document.getElementById("box"));
+</script>
+</body>
+</html>

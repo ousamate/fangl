@@ -1,0 +1,68 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<title></title>
+</head>
+<body>
+<div id="box"></div>
+<script type="text/javascript" src="js/react.min.js"></script>
+<script type="text/javascript" src="js/react-dom.min.js"></script>
+<script src="js/browser.min.js"></script>
+<script type="text/javascript" src="js/ajax.js"></script>
+<script type="text/babel">
+	var Login=React.createClass({
+		style:{
+			padding:30,
+			width:400,
+			height:200,
+			border:"1px solid grey",
+			margin:"100px auto",
+		},
+		style2:{
+			color:"red"
+		},
+		btnF:function(){
+			ajax({
+				type:"post",
+				url:"/user/find",
+				data:{
+                    user:this.refs.user.refs.input.value,
+                    pwd:this.refs.pwd.refs.input.value,
+                    findType:"exact"
+				},
+				success:function(data){
+					if(data.length>0){
+						location.href="guanli.html"
+					}
+					else{
+						alert("输入错误，请重新登录");
+					}
+				}
+			});
+		},
+		render:function(){
+			return <div style={this.style}>
+				<h1 style={this.style2}>登录</h1>
+				<InputEle type="text" ref="user">用户名</InputEle>
+				<InputEle type="password" ref="pwd">密码</InputEle>
+				<button onClick={this.btnF}>确认</button>
+			</div>
+		}
+	});
+
+	var InputEle=React.createClass({
+		style:{
+			display:"inline-block",
+			width:60,
+		},
+		render:function(){
+			return <p><label style={this.style}>{this.props.children}</label><input type={this.props.type} ref="input"/></p>
+		}
+	});
+
+
+	ReactDOM.render(<Login/>,document.getElementById("box"));
+</script>
+</body>
+</html>

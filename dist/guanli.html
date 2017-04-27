@@ -1,0 +1,288 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<title>学生管理</title>
+</head>
+<body>
+<div id="box"></div>
+<script type="text/javascript" src="js/react.min.js"></script>
+<script type="text/javascript" src="js/react-dom.min.js"></script>
+<script type="text/javascript" src="js/browser.min.js"></script>
+<script type="text/javascript" src="js/ajax.js"></script>
+<script type="text/babel">
+	var Manger=React.createClass({
+		style:{
+			float:"left",
+		},
+		style1:{
+			clear:"both"
+		},
+		style2:{
+			width:"800px",
+			padding:"10px 40px",
+			overflow:"hidden",
+			border:"1px solid grey"
+		},
+
+
+		getInitialState:function(){
+	 		return {
+	 			students:[],
+	 			stuData:{}
+	 		}
+	 	},
+	 	getSearchData:function(SearchData){
+	 		this.setState({
+	 			students:SearchData
+	 		});
+
+	 	},
+	 	getItemState:function(stuData){
+	 		console.log(stuData);
+	 		this.setState({
+	 			stuData:stuData
+	 		});
+	 	},
+	 	componentWillMount:function(){
+	 		this.show();
+	 	},
+		show:function(){
+			ajax({
+				type:"get",
+				url:"/students/find",
+				data:{},
+				success:function(data){
+				console.log(data)
+					 this.setState({
+					 students:data
+					});
+				}.bind(this)
+			});		
+		},
+
+
+		render:function(){
+			return <div>
+				<h1>学生管理</h1>
+			    <div style={this.style2}>				
+				<AddEle show={this.show}>增加</AddEle>
+				<UpdateEle stuData={this.state.stuData} show={this.show}>修改</UpdateEle>
+				<SearchEle getSearchData={this.getSearchData}></SearchEle>
+			</div>			
+				<TableEle show={this.show} getItemState={this.getItemState}>{this.state.students}</TableEle>
+				<Page></Page>
+			</div>
+		}
+	});
+var Page=React.createClass({
+	render:function(){
+		return <div>
+				<button>上一页</button>
+				<button>下一页</button>
+		</div>
+	}
+});
+var  SearchEle=React.createClass({
+	style:{
+		float:"left",
+	},
+	searchStu:function(){
+		ajax({
+			type:"get",
+			url:"/students/find",
+			data:{
+				name:this.refs.name.refs.input.value
+			},
+			success:function(data){
+				this.props.getSearchData(data);
+			}.bind(this)
+		});
+	},
+	render:function(){
+		return <div style={this.style}>
+				<h2>搜索</h2>
+				<InputEle ref="name">姓名：</InputEle>
+				<button onClick={this.searchStu}>搜索</button>
+		</div>	
+	}
+});
+var TableEle=React.createClass({
+	style:{
+		border:"1px solid black",
+	},
+	render:function(){
+		var ary=this.props.children.map(function(ele){
+				return <TrItem show={this.props.show} getItemState={this.props.getItemState}>{ele}</TrItem>
+		}.bind(this));
+		return <div>
+			<table style={this.style}>
+			<thead><tr style={this.style}><th style={this.style}>姓名</th><th style={this.style}>年龄</th><th style={this.style}>性别</th><th style={this.style}>操作</th></tr></thead>
+			<tbody>
+				{ary}
+			</tbody>
+			</table>
+		</div>
+	}
+});
+
+var TrItem=React.createClass({
+	style:{
+		border:"1px solid black",
+	},
+	del:function(){
+		ajax({
+			type:"get",
+			url:"/students/del",
+			data:{_id:this.props.children._id},
+			success:function(data){
+				this.props.show();
+			}.bind(this)
+		});
+	}, 
+	getItem:function(){
+		ajax({
+			type:"get",
+			url:"/students/find",
+			data:{
+				_id:this.props.children._id
+			},
+			success:function(data){
+				this.props.getItemState(data);
+			}.bind(this)
+		});
+	},
+	render:function(){		
+		return <tr>
+			<td style={this.style}>{this.props.children.name}</td>
+			<td style={this.style}>{this.props.children.age}</td>			
+			<td style={this.style}>{this.props.children.gender}</td>
+			<td style={this.style}>			
+				<button onClick={this.getItem}>修改</button>
+				<button  onClick={this.del}>删除</button>
+				<button>查看</button>
+			</td>
+		</tr>
+	}
+});
+
+var AddEle=React.createClass({
+	style:{
+		float:"left",
+		marginRight:60
+	},
+	addStu:function(){
+		var gender;
+		if(this.refs.male.checked){
+			gender="男";
+		}else if(this.refs.female.checked){
+			gender="女";
+		}
+		ajax({
+			type:"get",
+			url:"/students/add",
+			data:{
+				name:this.refs.name.refs.input.value,
+				age:this.refs.age.refs.input.value,
+				gender:gender
+			},
+			success:function(data){
+				this.props.show();
+			}.bind(this)
+		});
+	},
+	render:function(){
+		return <div style={this.style}>
+			<h2>{this.props.children}</h2>
+			<InputEle ref="name">姓名：</InputEle>
+			<InputEle ref="age">年龄：</InputEle>
+			<p><input type="radio" name="sex" value="男" ref="male"/>男
+			<input type="radio" name="sex" value="女" ref="female"/>女</p>
+			<button onClick={this.addStu}>增加</button>
+		</div>
+	}	
+});
+
+
+
+var UpdateEle=React.createClass({
+	style:{
+		float:"left",
+		marginRight:60
+	},
+	getInitialState:function(){
+		return {value:this.props.stuData.gender}
+	},
+	componentWillReceiveProps:function(newProps){
+		this.setState({
+			value:newProps.stuData.gender
+		});
+	},
+	change:function(e){
+		this.setState({
+			value:e.target.value
+		});
+	},
+	update:function(){
+		console.log(this.refs.male);
+		var gender;
+		if(this.refs.male.checked){
+				gender="男";
+		}
+		else{
+			gender="女";
+		}
+		console.log(gender);
+		ajax({
+			type:"get",
+			url:"/students/update",
+			data:{
+				_id:this.props.stuData._id,
+				name:this.refs.name.refs.input.value,
+				age:this.refs.age.refs.input.value,
+				gender:gender,
+			},
+			success:function(data){
+				this.props.show();
+			}.bind(this)
+		});
+	},
+	render:function(){
+		return <div style={this.style}>
+			<h2>{this.props.children}</h2>
+			<InputEle value={this.props.stuData.name} ref="name">姓名：</InputEle>
+			<InputEle value={this.props.stuData.age} ref="age">年龄：</InputEle>
+			<p><input type="radio" name="sexu" checked={this.state.value=='男'} onChange={this.change} value="男" ref="male"/>男
+			<input type="radio" name="sexu" checked={this.state.value=='女'} onChange={this.change} value="女" ref="female"/>女</p>
+			<button onClick={this.update}>修改</button>
+		</div>
+	}	
+});
+
+var InputEle=React.createClass({
+getInitialState:function(){
+	return {
+		value:this.props.value
+	}
+},
+componentWillReceiveProps:function(newProps){
+	this.setState({
+		value:newProps.value
+	});
+},
+change:function(e){
+	this.setState({
+		value:e.target.value
+	});
+},
+render:function(){
+	return <p>
+		<label>{this.props.children}</label><input type="text" ref="input" value={this.state.value} onChange={this.change}/><span></span>
+	</p>
+}
+});
+
+ReactDOM.render(<Manger/>,document.getElementById("box"));
+</script>
+</body>
+</html>
